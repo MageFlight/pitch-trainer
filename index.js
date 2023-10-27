@@ -28,7 +28,7 @@ function playNote() {
         const pitch = notes[Math.floor(Math.random() * notes.length)];
         const octave = Math.floor(Math.random() * 2 + 4);
         // const intonation = parseInt(prompt("Enter intonation"));
-        const intonation = 0;
+        const intonation = 49;
         currentNote = getFrequency(pitch, octave, intonation);
 
         startNote();
@@ -88,6 +88,16 @@ function checkAnswer(event) {
     event.preventDefault();
 }
 
+function playSelectedNote() {
+    const note = prompt("Enter note");
+    const pitch = note.match(/[a-g]#?/i)[0];
+    const octave = parseInt(note.match(/\d/)[0]);
+
+    currentNote = getFrequency(pitch, octave, 49);
+    startNote();
+}
+
+document.querySelector("#custom").addEventListener("click", playSelectedNote);
 document.querySelector("#play").addEventListener("click", playNote);
 document.querySelector("#replay").addEventListener("click", startNote);
 document.querySelector("#guessForm").addEventListener("submit", checkAnswer);

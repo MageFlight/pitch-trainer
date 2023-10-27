@@ -14,6 +14,7 @@ const frequencies = {
 };
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let currentNote = null;
 let oscillator = null;
 
 function getFrequency(note, octave, intonation) {
@@ -23,35 +24,38 @@ function getFrequency(note, octave, intonation) {
 
 function playNote() {
     try {
-        const pitch = prompt("enter pitch");
-        const octave = parseInt(prompt("enter octave"));
-        const intonation = parseInt(prompt("Enter intonation"));
-        const frequency = getFrequency(pitch, octave, intonation);
-        
-        const playingText = document.createElement('p');
-        playingText.innerText = "Playing frequency " + frequency;
-        document.body.appendChild(playingText);
+        const notes = Object.keys(frequencies);
+        const pitch = notes[Math.floor(Math.random() * notes.length)];
+        const octave = Math.floor(Math.random() * 2 + 4);
+        // const intonation = parseInt(prompt("Enter intonation"));
+        const intonation = 0;
+        currentNote = getFrequency(pitch, octave, intonation);
 
-        startOscillator(frequency);
-        setTimeout(stopSound, 4000);
+        startNote();
     } catch (e) {
         alert(e.stack);
         oscillator.stop();
     }
 }
 
-function startOscillator(frequency) {
+function startNote() {
+    if (currentNote === null) return;
+    const playingText = document.createElement('p');
+    playingText.innerText = "Playing frequency " + currentNote;
+    document.body.appendChild(playingText);
+
     if (oscillator !== null) {
         oscillator.stop();
     }
 
     oscillator = audioCtx.createOscillator();
     oscillator.connect(audioCtx.destination);
-    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+    oscillator.frequency.setValueAtTime(currentNote, audioCtx.currentTime);
     oscillator.start();
+    setTimeout(stopNote, 4000);
 }
 
-function stopSound() {
+function stopNote() {
     if (oscillator !== null) {
         oscillator.stop();
         oscillator = null;
@@ -60,5 +64,30 @@ function stopSound() {
     if (playingText) playingText.remove();
 }
 
+function checkAnswer(event) {
+    try {
+        if (currentNote === null) return;
+
+        const guess = document.querySelector('#answerInput').value;
+        if (!guess || guess === "") return;
+        
+        let pitch = guess.toLowerCase().match(/[a-g]#?/)[0];
+        if (pitch == "b#") pitch = "c";
+        if (pitch == "e#") pitch = "f";
+
+        const octave = parseInt(guess.match(/\d/));
+        const guessFrequency = getFrequency(pitch, octave, 0);
+        if (currentNote == guessFrequency) {
+            alert("Correct!");
+        } else {
+            alert("Wrong.");
+        }
+    } catch (e) {
+        alert(e.stack);
+    }
+    event.preventDefault();
+}
+
 document.querySelector("#play").addEventListener("click", playNote);
-document.querySelector("#stop").addEventListener("click", stopSound);
+document.querySelector("#replay").addEventListener("click", startNote);
+document.querySelector("#guessForm").addEventListener("submit", checkAnswer);
